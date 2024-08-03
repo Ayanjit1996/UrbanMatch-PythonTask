@@ -1,0 +1,93 @@
+Report:
+
+---Testing method---
+    - Run uvicorn main:app --reload
+    - Use http://localhost:8000/docs for accessing the end points
+    - In a separate window, run the bash script "sample.sh" for 20 sample users registration.
+
+---Endpoints---
+
+1. User Registration -
+    - Endpoint : "POST /user/"
+    - Description : Registers a new user. Includes email verification and interests formatting.
+    - Request Body: In json
+        eg - 
+        "
+        {
+            "name": "John Doe",
+            "age": 30,
+            "gender": "M",
+            "email": "john.doe@google.com",
+            "city": "CityName",
+            "interests": ["reading", "coding", "sports","yoga","travelling"]
+        }
+        "
+    - Response: The newly created user with interests in a list format.
+
+2. List All Users - 
+    - Endpoint : "GET /users/all_users"
+    - Description : Retrieves a paginated list of all users.
+    - Response: List of users.
+
+3. View User Profile - 
+    - Endpoint: "GET /user/view_profile/{user_id}"
+    - Description: Retrieves the profile of a user by their ID.
+    - Response: The user's profile with interests in a list format.
+
+4. Update User
+    - Endpoint: "PATCH /user/update/{user_id}"
+    - Description: Updates a user's details. Also includes email verification.
+    - Request Body: Send those field which are required to be changed along with user_id
+    eg - 
+        1. {
+                "name": "John Doe"
+            }
+        2. {
+                "age": 30,
+                "gender" : "F"
+            }
+            ....    
+    - Response: Updated user profile.
+
+5. Find Match
+    - Endpoint: "POST /users/find_match/{user_id}"
+    - Description: Finds and sorts the users who match the given criteria (age, city, interests). Returns users of the opposite gender.
+    - Request Body: JSON body with optional "interests" field.
+    - Query Parameters:
+        - "age_lower": Optional Minimum age for matching.
+        - "age_upper": Optional Maximum age for matching.
+        - "city": Optional city filter.
+        city eg:
+            [ "cityA" , "cityB" ] etc..
+
+    - Match-making approach:
+        - Age and City Filtering:
+            -	If the user specifies a minimum age, maximum age, or both, the search query will filter users within the specified age range. If only the minimum age is provided, the query will include users from that age to the highest possible age. If only the maximum age is provided, the query will include users from the lowest possible age up to that age. If both are provided, the query will include users within the given age boundaries.
+            -	The city filter is optional. If a city is specified, the search will be limited to users in those particular cities, otherwise the search will include users from all cities.
+            -	The ranking of profiles is based on the percentage of matching interests.
+        -	Proximity Search:
+            -	If no age range is specified, a proximity search is performed. Users are first filtered by the nearest age values and the age difference is gradually increased up to a maximum of 10 years.
+            -	Within each age bracket, the search is refined based on the percentage of matching interests.
+
+    - Response: List of matched users sorted by match percentage and age.
+
+6. Delete User:
+    - Endpoint: "DELETE /user/delete/{user_id}"
+    - Description: Deletes a user by their ID.
+    - Response: Success or failure message.
+
+7. Delete All Users:
+    - Endpoint: "DELETE /delete-all-users/confirm"
+    - Description: Deletes all entries from all tables.
+    - Response: Success or failure message.
+
+---Utility Functions---
+
+- "convert_to_string(interests: List[str])":
+    - Converts a list of interests into a comma-separated string.
+
+- "convert_to_list(interests: str)":
+    - Converts a comma-separated string of interests into a list.
+
+- "sort_on_match_percentage(user_interests, matched_users)":
+    - Sorts "matched_users" based on their match percentage with. Matches are calculated and sorted in descending order of match percentage.
